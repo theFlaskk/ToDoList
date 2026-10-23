@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Мои задачи — TodoList{% endblock %}
+{% block content %}
+<div class="page-heading">
+  <div><p class="eyebrow">МОЁ ПРОСТРАНСТВО</p><h1>Мои задачи</h1><p class="muted">Планируй спокойно, выполняй по шагам.</p></div>
+  <a class="button primary" href="{% url 'task_create' %}">＋ Новая задача</a>
+</div>
+<form method="get" class="filters">
+  <input type="search" name="q" value="{{ query }}" placeholder="Найти задачу…">
+  <select name="status">
+    <option value="">Все статусы</option>
+    {% for value,label in statuses %}<option value="{{ value }}" {% if selected_status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+  </select>
+  <button class="button" type="submit">Фильтровать</button>
+  <a class="button subtle" href="{% url 'task_list' %}">Сбросить</a>
+</form>
+<section class="task-list">
+{% for task in tasks %}
+  <article class="task-card {% if task.status == 'done' %}completed{% endif %}">
+    <div class="task-main">
+      <form method="post" action="{% url 'task_toggle_done' task.pk %}">
+        {% csrf_token %}
+        <button class="check" type="submit" aria-label="Изменить статус">{% if task.status == 'done' %}✓{% endif %}</button>
+      </form>
+      <div class="task-copy">
+        <h2>{{ task.title }}</h2>
+        {% if task.description %}<p>{{ task.description|truncatechars:160 }}</p>{% endif %}
+        <div class="meta">
+          <span class="pill">{{ task.get_status_display }}</span>
+          <span class="pill priority-{{ task.priority }}">{{ task.get_priority_display }} приоритет</span>
+          {% if task.category %}<span class="pill">{{ task.category.name }}</span>{% endif %}
+          {% if task.due_date %}<span class="muted">Срок: {{ task.due_date|date:"d.m.Y" }}</span>{% endif %}
+        </div>
+      </div>
+    </div>
+    <div class="task-actions">
+      <a href="{% url 'task_edit' task.pk %}">Изменить</a>
+      <form method="post" action="{% url 'task_delete' task.pk %}" onsubmit="return confirm('Удалить задачу?')">
+        {% csrf_token %}<button class="danger-link" type="submit">Удалить</button>
+      </form>
+    </div>
+  </article>
+{% empty %}
+  <div class="empty-state"><div class="empty-icon">✦</div><h2>Пока задач нет</h2><p>Добавь первую задачу — и начнём.</p><a class="button primary" href="{% url 'task_create' %}">Создать задачу</a></div>
+{% endfor %}
+</section>
+{% endblock %}
